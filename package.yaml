@@ -27,6 +27,8 @@ dependencies:
 - req
 - text
 - unordered-containers
+- microlens-platform
+- microlens-aeson
 
 library:
   source-dirs: src
