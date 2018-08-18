@@ -1,8 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Input where
+module Methods.Input where
 
-import KodiMethods
+import Types
+import Calls
 import Data.HashMap.Strict as HM
 import Data.Text
 import Data.Aeson.Types hiding (Error)
@@ -228,8 +229,8 @@ data Action = Left
             | Noop
 
 actionTxt :: Action -> Text
-actionTxt Input.Left              = "left"
-actionTxt Input.Right             = "right"
+actionTxt Methods.Input.Left      = "left"
+actionTxt Methods.Input.Right     = "right"
 actionTxt Up                      = "up"
 actionTxt Down                    = "down"
 actionTxt PageUp                  = "pageUp"
