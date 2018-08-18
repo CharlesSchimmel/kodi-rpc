@@ -4,7 +4,7 @@ cabal-version: >= 1.10
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 81ac2a1546ce7fec699f652eaf3f9e461eb33cd54164ac8c653bc2e1136ee650
+-- hash: 3f7280a6937e58a31197abd81dfeb8932a7257c7194d0d5f3ca907cad4ff0ab1
 
 name:           KodiRPC
 version:        0.1.0.0
@@ -27,11 +27,11 @@ source-repository head
 
 library
   exposed-modules:
-      Calls
-      Methods.GUI
-      Methods.Input
-      Methods.Player
-      Types
+      KodiRPC.Calls
+      KodiRPC.Methods.GUI
+      KodiRPC.Methods.Input
+      KodiRPC.Methods.Player
+      KodiRPC.Types
   other-modules:
       Paths_KodiRPC
   hs-source-dirs:
@@ -39,14 +39,16 @@ library
   build-depends:
       aeson
     , base >=4.7 && <5
+    , conduit
     , containers
     , data-default-class
     , microlens-aeson
     , microlens-platform
+    , network
     , req
     , text
     , unordered-containers
-    , websockets-rpc
+    , websockets
   default-language: Haskell2010
 
 executable KodiRPC-exe
@@ -60,14 +62,16 @@ executable KodiRPC-exe
       KodiRPC
     , aeson
     , base >=4.7 && <5
+    , conduit
     , containers
     , data-default-class
     , microlens-aeson
     , microlens-platform
+    , network
     , req
     , text
     , unordered-containers
-    , websockets-rpc
+    , websockets
   default-language: Haskell2010
 
 test-suite KodiRPC-test
@@ -82,12 +86,14 @@ test-suite KodiRPC-test
       KodiRPC
     , aeson
     , base >=4.7 && <5
+    , conduit
     , containers
     , data-default-class
     , microlens-aeson
     , microlens-platform
+    , network
     , req
     , text
     , unordered-containers
-    , websockets-rpc
+    , websockets
   default-language: Haskell2010

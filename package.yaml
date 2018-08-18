@@ -29,7 +29,9 @@ dependencies:
 - unordered-containers
 - microlens-platform
 - microlens-aeson
-- websockets-rpc
+- websockets
+- network
+- conduit
 
 library:
   source-dirs: src
