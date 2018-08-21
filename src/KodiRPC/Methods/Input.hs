@@ -3,32 +3,28 @@
 module KodiRPC.Methods.Input where
 
 import KodiRPC.Types
-import KodiRPC.Calls
 
 import Prelude as P
 import Data.HashMap.Strict as HM
 import Data.Text as T
 import Data.Aeson.Types hiding (Error)
 
-method' = Method 1.0 2.0
-methodNoP x = method' x emptyObject
-
-back                  = methodNoP   "Input.Back"
-contextMenu           = methodNoP   "Input.ContextMenu"
-down                  = methodNoP   "Input.Down"
+back                  = methodNoP "Input.Back"
+contextMenu           = methodNoP "Input.ContextMenu"
+down                  = methodNoP "Input.Down"
 executeAction :: Action -> Method
-executeAction action  = method'     "Input.ExecuteAction" $ Object . HM.singleton "action" $ showAction action
-home                  = methodNoP   "Input.Home"
-info                  = methodNoP   "Input.Info"
-left                  = methodNoP   "Input.Left"
-right                 = methodNoP   "Input.Right"
-select                = methodNoP   "Input.Select"
+executeAction action  = method'   "Input.ExecuteAction" $ HM.singleton "action" $ showAction action
+home                  = methodNoP "Input.Home"
+info                  = methodNoP "Input.Info"
+left                  = methodNoP "Input.Left"
+right                 = methodNoP "Input.Right"
+select                = methodNoP "Input.Select"
 sendText :: Text -> Method
-sendText str          = method'     "Input.SendText" $ Object $ HM.singleton "text" $ String str
-showCodec             = methodNoP   "Input.ShowCodec"
-showOsd               = methodNoP   "Input.ShowOSD"
-showPlayerProcessInfo = methodNoP   "Input.ShowPlayerProcessInfo"
-up                    = methodNoP   "Input.Up"
+sendText str          = method'   "Input.SendText"      $ HM.singleton "text" $ String str
+showCodec             = methodNoP "Input.ShowCodec"
+showOsd               = methodNoP "Input.ShowOSD"
+showPlayerProcessInfo = methodNoP "Input.ShowPlayerProcessInfo"
+up                    = methodNoP "Input.Up"
 
 data Action = Left | Right                 | Up                 | Down                | PageUp                  | PageDown
                    | Select                | Highlight          | Parentdir           | Parentfolder            | Back

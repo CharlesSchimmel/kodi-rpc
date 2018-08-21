@@ -1,3 +1,4 @@
 .stack-work/
 kodi-rpc.cabal
 *~
+.*neomake*

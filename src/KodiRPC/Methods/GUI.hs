@@ -4,8 +4,6 @@
 module KodiRPC.Methods.GUI where
 
 import KodiRPC.Types
-import KodiRPC.Methods.Input
-import KodiRPC.Calls
 
 import Data.Aeson
 import Data.HashMap.Strict as HM
@@ -14,4 +12,6 @@ import GHC.Generics
 
 
 getProperties :: [GUIProp] -> Method
-getProperties prop = method' "GUI.GetProperties" (toJSON prop)
+getProperties prop = method' "GUI.GetProperties" $ HM.singleton "properties" (toJSON prop)
+
+getWindow = getProperties [Currentwindow]

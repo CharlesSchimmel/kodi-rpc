@@ -16,12 +16,12 @@ import Data.Monoid
 import Data.Text as T
 import Data.Text.Read
 import Data.Char as C (toUpper)
-import Data.Map.Strict as HM
+import Data.HashMap.Strict as HM
 import GHC.Generics
 import Lens.Micro.Platform hiding ((.=))
 import Network.HTTP.Req as R
 
-type Params = Value
+type Params = Object
 
 data KodiInstance = KodiInstance
    { _server :: T.Text
@@ -43,6 +43,11 @@ instance ToJSON Method where
              , "method"  .= method
              , "params"  .= toJSON params
              ]
+
+method' :: String -> Params -> Method
+method' = Method 1.0 2.0
+methodNoP x = method' x HM.empty
+
 
 data Notif = Notif
    { _notifJsonrpc :: String
@@ -68,6 +73,8 @@ instance ToJSON GUIProp where
 
 showGUIProp :: GUIProp -> Value
 showGUIProp  = String . toLower . pack . show
+
+type Response = Either String Value
 
 -- readGUIProp :: Value -> GUIProp
 -- readGUIProp g = read prop :: GUIProp

@@ -24,14 +24,14 @@ dependencies:
 - aeson
 - containers
 - data-default-class
+- lens-aeson
+- microlens-aeson
+- microlens-platform
+- network
 - req
 - text
 - unordered-containers
-- microlens-platform
-- microlens-aeson
 - websockets
-- network
-- conduit
 
 library:
   source-dirs: src
