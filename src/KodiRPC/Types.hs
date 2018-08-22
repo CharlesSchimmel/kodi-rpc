@@ -48,7 +48,6 @@ method' :: String -> Params -> Method
 method' = Method 1.0 2.0
 methodNoP x = method' x HM.empty
 
-
 data Notif = Notif
    { _notifJsonrpc :: String
    , _notifMethod  :: String
@@ -71,17 +70,14 @@ data GUIProp = Currentwindow
 instance ToJSON GUIProp where
     toJSON = String . T.toLower . pack . show
 
-showGUIProp :: GUIProp -> Value
-showGUIProp  = String . toLower . pack . show
-
 type Response = Either String Value
 
--- readGUIProp :: Value -> GUIProp
--- readGUIProp g = read prop :: GUIProp
---     where prop = (C.toUpper x) : xs
---           x = T.head g
---           xs = unpack $ T.tail g
+data Window = Window
+    { _winLabel :: Value
+    , _winId    :: Value
+    } deriving (Generic, Show, Read)
 
+makeLenses ''Window
 makeLenses ''KodiInstance
 makeLenses ''Method
 makeLenses ''Notif

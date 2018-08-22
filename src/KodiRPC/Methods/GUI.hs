@@ -13,5 +13,3 @@ import GHC.Generics
 
 getProperties :: [GUIProp] -> Method
 getProperties prop = method' "GUI.GetProperties" $ HM.singleton "properties" (toJSON prop)
-
-getWindow = getProperties [Currentwindow]

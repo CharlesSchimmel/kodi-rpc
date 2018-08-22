@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 40735d4c2a6074cb3f58e9cfab145e2bf71150a1372463aa61a7da80abbf69dc
+-- hash: c49db4131ce50568a5f51997fae7c28d2f4c323859685c106e62292facd84caf
 
 name:           KodiRPC
 version:        0.1.0.0
@@ -45,8 +45,8 @@ library
     , microlens-platform
     , network
     , req
-    , streaming
     , text
+    , transformers
     , unordered-containers
     , websockets
   default-language: Haskell2010
@@ -69,8 +69,8 @@ executable KodiRPC-exe
     , microlens-platform
     , network
     , req
-    , streaming
     , text
+    , transformers
     , unordered-containers
     , websockets
   default-language: Haskell2010
@@ -94,8 +94,8 @@ test-suite KodiRPC-test
     , microlens-platform
     , network
     , req
-    , streaming
     , text
+    , transformers
     , unordered-containers
     , websockets
   default-language: Haskell2010

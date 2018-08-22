@@ -30,6 +30,7 @@ dependencies:
 - network
 - req
 - text
+- transformers
 - unordered-containers
 - websockets
 
