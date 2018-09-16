@@ -11,7 +11,6 @@ import           Control.Exception
 import           Control.Monad
 import           Control.Monad.Trans.Maybe
 import           Control.Monad.IO.Class
-import           Data.Aeson
 import           Data.Aeson         as A
 import           Data.Aeson.Types
 import           Data.Default.Class
@@ -34,12 +33,12 @@ kReq ki method = req POST (http url /: "jsonrpc") (ReqBodyJson method) jsonRespo
 
 local = KodiInstance "localhost" 8080
 
-kall :: KodiInstance -> Method -> IO Response
+kall :: KodiInstance -> Method -> IO (Either String Response)
 kall kodiInstance method = handle excpt (Right <$> kall' kodiInstance method)
    where excpt e    = return . Left $ show (e::HttpException)
          kall' ki m = runReq def $ do
             r <- kReq ki m
-            return (responseBody r :: Value)
+            return (responseBody r :: Response)
 
 notification :: KodiInstance -> IO (Maybe Notif)
 notification ki = withSocketsDo $ WS.runClient (T.unpack $ ki^.server) 9090 "/jsonrpc" kNotifHandler
@@ -53,8 +52,8 @@ getWindow :: KodiInstance -> IO (Maybe Window)
 getWindow ki = do
     response <- kall ki $ getProperties [Currentwindow]
     case response of
-        (Right obj) -> do
-            let win   = lookup' "result" obj >>= lookup' "currentwindow"
+        (Right res) -> do
+            let win   = lookup' "currentwindow" $ res^.result
                 winId = win >>= lookup' "id"
                 label = win >>= lookup' "label"
             return $ Window <$> label <*> winId
@@ -66,23 +65,23 @@ getWindow ki = do
           maybeNum (Number n)    = Just n
           maybeNum _             = Nothing
 
-smartActionMap (Window "Fullscreen video" _)     I.Up    = I.Bigstepforward
-smartActionMap (Window "Fullscreen video" _)     I.Down  = I.Bigstepback
-smartActionMap (Window "Fullscreen video" _)     I.Left  = I.Stepback
-smartActionMap (Window "Fullscreen video" _)     I.Right = I.Stepforward
-smartActionMap (Window "Audio visualisation" _)  I.Up    = I.Bigstepforward
-smartActionMap (Window "Audio visualisation" _)  I.Down  = I.Bigstepback
-smartActionMap (Window "Audio visualisation" _)  I.Left  = I.Stepback
-smartActionMap (Window "Audio visualisation" _)  I.Right = I.Stepforward
-smartActionMap _ x = x
+smartActionMap :: Window -> I.Action -> I.Action
+smartActionMap (Window "Fullscreen video"    _ ) I.Up    = I.Bigstepforward
+smartActionMap (Window "Fullscreen video"    _ ) I.Down  = I.Bigstepback
+smartActionMap (Window "Fullscreen video"    _ ) I.Left  = I.Stepback
+smartActionMap (Window "Fullscreen video"    _ ) I.Right = I.Stepforward
+smartActionMap (Window "Audio visualisation" _ ) I.Up    = I.Bigstepforward
+smartActionMap (Window "Audio visualisation" _ ) I.Down  = I.Bigstepback
+smartActionMap (Window "Audio visualisation" _ ) I.Left  = I.Stepback
+smartActionMap (Window "Audio visualisation" _ ) I.Right = I.Stepforward
+smartActionMap _                                 x       = x
 
-smartAction :: KodiInstance -> I.Action -> IO Response
+smartAction :: KodiInstance -> I.Action -> IO (Either String Response)
 smartAction ki action = do
     window <- getWindow ki
     case window of
-        (Just window) -> do
-            let sAct = smartActionMap window action
-            result <- kall ki $ I.executeAction sAct
-            return result
-        _ -> return $ Left "Connection error"
+        (Just window) -> 
+            kall ki $ I.executeAction $ smartActionMap window action
+        _ -> 
+            return $ Left "Connection error. Received no window."
 
