@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: c49db4131ce50568a5f51997fae7c28d2f4c323859685c106e62292facd84caf
+-- hash: 5267e53cc966acd0d7bca0e5f71812b600221c6d2a4a6a7aa4889980ba939102
 
 name:           KodiRPC
 version:        0.1.0.0
@@ -44,6 +44,7 @@ library
     , microlens-aeson
     , microlens-platform
     , network
+    , regex-compat
     , req
     , text
     , transformers
@@ -68,6 +69,7 @@ executable KodiRPC-exe
     , microlens-aeson
     , microlens-platform
     , network
+    , regex-compat
     , req
     , text
     , transformers
@@ -93,6 +95,7 @@ test-suite KodiRPC-test
     , microlens-aeson
     , microlens-platform
     , network
+    , regex-compat
     , req
     , text
     , transformers

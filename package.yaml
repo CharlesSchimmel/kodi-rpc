@@ -33,6 +33,7 @@ dependencies:
 - transformers
 - unordered-containers
 - websockets
+- regex-compat
 
 library:
   source-dirs: src
