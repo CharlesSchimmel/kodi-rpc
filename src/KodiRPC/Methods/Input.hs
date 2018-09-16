@@ -13,14 +13,14 @@ back                  = methodNoP "Input.Back"
 contextMenu           = methodNoP "Input.ContextMenu"
 down                  = methodNoP "Input.Down"
 executeAction :: Action -> Method
-executeAction action  = method'   "Input.ExecuteAction" $ HM.singleton "action" $ showAction action
+executeAction         = method'   "Input.ExecuteAction" . HM.singleton "action" . showAction
 home                  = methodNoP "Input.Home"
 info                  = methodNoP "Input.Info"
 left                  = methodNoP "Input.Left"
 right                 = methodNoP "Input.Right"
 select                = methodNoP "Input.Select"
 sendText :: Text -> Method
-sendText str          = method'   "Input.SendText"      $ HM.singleton "text" $ String str
+sendText              = method'   "Input.SendText"      . HM.singleton "text" . String
 showCodec             = methodNoP "Input.ShowCodec"
 showOsd               = methodNoP "Input.ShowOSD"
 showPlayerProcessInfo = methodNoP "Input.ShowPlayerProcessInfo"
