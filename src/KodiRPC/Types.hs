@@ -70,7 +70,20 @@ data GUIProp = Currentwindow
 instance ToJSON GUIProp where
     toJSON = String . T.toLower . pack . show
 
-type Response = Either String Value
+-- type Response = Either String Value
+
+data Response = Response
+  { _result     :: Value
+  , _error      :: Maybe String
+  , _responseId :: String
+  }
+  deriving (Show)
+
+instance FromJSON Response where
+    parseJSON = withObject "Response" $ \v -> Response
+        <$> v.: "result"
+        <*> v.:? "error"
+        <*> v.: "id"
 
 data Window = Window
     { _winLabel :: Value
@@ -81,3 +94,4 @@ makeLenses ''Window
 makeLenses ''KodiInstance
 makeLenses ''Method
 makeLenses ''Notif
+makeLenses ''Response
