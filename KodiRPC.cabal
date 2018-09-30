@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 5267e53cc966acd0d7bca0e5f71812b600221c6d2a4a6a7aa4889980ba939102
+-- hash: 41a372d30fd5dac215b5143048a5951aaafd102b3346f42ea1d9113e085ba8a5
 
 name:           KodiRPC
 version:        0.1.0.0
@@ -31,6 +31,7 @@ library
       KodiRPC.Methods.Input
       KodiRPC.Methods.Player
       KodiRPC.Types
+      KodiRPC.Util
   other-modules:
       Paths_KodiRPC
   hs-source-dirs:
@@ -46,6 +47,7 @@ library
     , network
     , regex-compat
     , req
+    , scientific
     , text
     , transformers
     , unordered-containers
@@ -71,6 +73,7 @@ executable KodiRPC-exe
     , network
     , regex-compat
     , req
+    , scientific
     , text
     , transformers
     , unordered-containers
@@ -97,6 +100,7 @@ test-suite KodiRPC-test
     , network
     , regex-compat
     , req
+    , scientific
     , text
     , transformers
     , unordered-containers
