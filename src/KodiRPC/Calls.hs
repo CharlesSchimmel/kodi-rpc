@@ -60,10 +60,6 @@ getWindow ki = do
         _ -> return Nothing
     where lookup' key (Object o) = HM.lookup key o
           lookup' _ _            = Nothing
-          maybeStr (String s)    = Just s
-          maybeStr _             = Nothing
-          maybeNum (Number n)    = Just n
-          maybeNum _             = Nothing
 
 smartActionMap :: Window -> I.Action -> I.Action
 smartActionMap (Window "Fullscreen video"    _ ) I.Up    = I.Bigstepforward
