@@ -6,6 +6,7 @@ import KodiRPC.Types as Ty
 import qualified KodiRPC.Methods.Input as I
 import KodiRPC.Methods.GUI
 
+import Debug.Trace
 import           Control.Concurrent
 import           Control.Exception
 import           Control.Monad
@@ -38,7 +39,9 @@ kall kodiInstance method = handle excpt (Right <$> kall' kodiInstance method)
    where excpt e    = return . Left $ show (e::HttpException)
          kall' ki m = runReq def $ do
             r <- kReq ki m
-            return (responseBody r :: Response)
+            return $ tdb (responseBody r :: Response)
+
+tdb x = trace (show x) x
 
 notification :: KodiInstance -> IO (Maybe Notif)
 notification ki = withSocketsDo $ WS.runClient (T.unpack $ ki^.server) 9090 "/jsonrpc" kNotifHandler
@@ -48,16 +51,19 @@ notification ki = withSocketsDo $ WS.runClient (T.unpack $ ki^.server) 9090 "/js
             let dMsg = decode msg :: Maybe Notif
             return dMsg
 
-getWindow :: KodiInstance -> IO (Maybe Window)
+eitherToMaybe :: Either a b -> Maybe b
+eitherToMaybe (Left _) = Nothing
+eitherToMaybe (Right x) = Just x
+
+-- getWindow :: KodiInstance -> IO (Maybe Window)
 getWindow ki = do
     response <- kall ki $ getProperties [Currentwindow]
-    case response of
-        (Right res) -> do
-            let win   = lookup' "currentwindow" $ res^.result
-                winId = win >>= lookup' "id"
-                label = win >>= lookup' "label"
-            return $ Window <$> label <*> winId
-        _ -> return Nothing
+    let maybeRes = eitherToMaybe response
+        val = join $ eitherToMaybe <$> _result <$> maybeRes
+    let win = lookup' "currentwindow" =<< val
+        label = lookup' "label" =<< win
+        winId = lookup' "id" =<< win
+    return $ Window <$> label <*> winId
     where lookup' key (Object o) = HM.lookup key o
           lookup' _ _            = Nothing
 
@@ -80,4 +86,3 @@ smartAction ki action = do
             kall ki $ I.executeAction $ smartActionMap window action
         _ -> 
             return $ Left "Connection error. Received no window."
-

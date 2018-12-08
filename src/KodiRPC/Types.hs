@@ -1,20 +1,25 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
 
 module KodiRPC.Types where
 
 import Prelude as P
 import Control.Monad.IO.Class
+import Control.Applicative
 import Control.Monad
 import Control.Exception
-import Data.Aeson
-import Data.Aeson.Types
+import Data.Aeson hiding (Result, Error)
+import Data.Aeson.Types hiding (Result, Error)
 import Data.Default.Class
 import Data.Either
+import Data.Maybe
 import Data.Monoid
 import Data.Text as T
 import Data.Text.Read
+import Data.Traversable as Trv
 import Data.Char as C (toUpper)
 import Data.HashMap.Strict as HM
 import GHC.Generics
@@ -70,20 +75,20 @@ data GUIProp = Currentwindow
 instance ToJSON GUIProp where
     toJSON = String . T.toLower . pack . show
 
--- type Response = Either String Value
-
 data Response = Response
-  { _result     :: Value
-  , _error      :: Maybe String
+  { _result :: Either Value Value
   , _responseId :: String
   }
   deriving (Show)
 
 instance FromJSON Response where
-    parseJSON = withObject "Response" $ \v -> Response
-        <$> v.: "result"
-        <*> v.:? "error"
-        <*> v.: "id"
+  parseJSON (Object v) = Response
+    <$> (doTheThing <$> (v .:? "error") <*> (v .:? "result"))
+    <*> v.: "id"
+
+-- there's definitely a better way to do this
+doTheThing (Just a) Nothing = Left a
+doTheThing Nothing (Just a) = Right a
 
 data Window = Window
     { _winLabel :: Value
