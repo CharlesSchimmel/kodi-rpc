@@ -11,11 +11,12 @@ import           Control.Concurrent
 import           Control.Exception
 import           Control.Monad
 import           Control.Monad.Trans.Maybe
+import           Control.Monad.Trans.Except
 import           Control.Monad.IO.Class
 import           Data.Aeson         as A
 import           Data.Aeson.Types
 import           Data.Default.Class
-import           Data.Either
+import           Data.Either as E
 import           Data.HashMap.Lazy  as HM
 import           Data.Maybe
 import           Data.Monoid
@@ -51,21 +52,23 @@ notification ki = withSocketsDo $ WS.runClient (T.unpack $ ki^.server) 9090 "/js
             let dMsg = decode msg :: Maybe Notif
             return dMsg
 
-eitherToMaybe :: Either a b -> Maybe b
-eitherToMaybe (Left _) = Nothing
-eitherToMaybe (Right x) = Just x
+eitherToMaybe = either (const Nothing) Just
 
--- getWindow :: KodiInstance -> IO (Maybe Window)
+mapLeft f (Left a) = Left $ f a
+mapLeft _ a = a
+
+getWindow :: KodiInstance -> IO (Maybe Window)
 getWindow ki = do
-    response <- kall ki $ getProperties [Currentwindow]
-    let maybeRes = eitherToMaybe response
-        val = join $ eitherToMaybe <$> _result <$> maybeRes
-    let win = lookup' "currentwindow" =<< val
-        label = lookup' "label" =<< win
-        winId = lookup' "id" =<< win
-    return $ Window <$> label <*> winId
-    where lookup' key (Object o) = HM.lookup key o
-          lookup' _ _            = Nothing
+    let response = MaybeT $ do
+        r <- kall ki $ getProperties [Currentwindow] -- Either String Response
+        return $ join $ eitherToMaybe . _result <$> eitherToMaybe r
+    runMaybeT $ do
+        win <- response
+        label <- lookup' "currentwindow" win
+        winId <- lookup' "id" win
+        return $ Window label winId -- change Window to Window String Int ?
+    where lookup' key (Object o) = MaybeT $ return $ HM.lookup key o
+          lookup' _ _            = MaybeT $ return Nothing
 
 smartActionMap :: Window -> I.Action -> I.Action
 smartActionMap (Window "Fullscreen video"    _ ) I.Up    = I.Bigstepforward
@@ -79,10 +82,6 @@ smartActionMap (Window "Audio visualisation" _ ) I.Right = I.Stepforward
 smartActionMap _                                 x       = x
 
 smartAction :: KodiInstance -> I.Action -> IO (Either String Response)
-smartAction ki action = do
-    window <- getWindow ki
-    case window of
-        (Just window) -> 
-            kall ki $ I.executeAction $ smartActionMap window action
-        _ -> 
-            return $ Left "Connection error. Received no window."
+smartAction ki action = getWindow ki >>= maybe conErr doAction
+    where doAction window = kall ki $ I.executeAction $ smartActionMap window action
+          conErr = return $ Left "Connection error. Received no window."

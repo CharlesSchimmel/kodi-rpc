@@ -24,6 +24,7 @@ dependencies:
 - aeson
 - containers
 - data-default-class
+- either
 - lens-aeson
 - microlens-aeson
 - microlens-platform
@@ -35,6 +36,7 @@ dependencies:
 - websockets
 - regex-compat
 - scientific
+- vector
 
 library:
   source-dirs: src
