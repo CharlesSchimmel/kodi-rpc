@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 78be43d1219b7829e6ea2255e4cc76a792774c304018aca9758ddaf14e3662f4
+-- hash: 8a07cf5b7d33687c1367670bf2c6bf0cc8016eb926e6f36cf5adf3ed0a0f1670
 
 name:           KodiRPC
 version:        0.1.0.0
@@ -27,6 +27,7 @@ source-repository head
 library
   exposed-modules:
       KodiRPC.Calls
+      KodiRPC.Methods.Application
       KodiRPC.Methods.GUI
       KodiRPC.Methods.Input
       KodiRPC.Methods.Player

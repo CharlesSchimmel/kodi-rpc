@@ -9,22 +9,22 @@ import Data.HashMap.Strict as HM
 import Data.Text as T
 import Data.Aeson.Types hiding (Error)
 
-back                  = methodNoP "Input.Back"
 contextMenu           = methodNoP "Input.ContextMenu"
-down                  = methodNoP "Input.Down"
-executeAction :: Action -> Method
-executeAction         = method'   "Input.ExecuteAction" . HM.singleton "action" . showAction
 home                  = methodNoP "Input.Home"
 info                  = methodNoP "Input.Info"
-left                  = methodNoP "Input.Left"
-right                 = methodNoP "Input.Right"
 select                = methodNoP "Input.Select"
-sendText :: Text -> Method
-sendText              = method'   "Input.SendText"      . HM.singleton "text" . String
 showCodec             = methodNoP "Input.ShowCodec"
 showOsd               = methodNoP "Input.ShowOSD"
 showPlayerProcessInfo = methodNoP "Input.ShowPlayerProcessInfo"
+back                  = methodNoP "Input.Back"
+down                  = methodNoP "Input.Down"
 up                    = methodNoP "Input.Up"
+left                  = methodNoP "Input.Left"
+right                 = methodNoP "Input.Right"
+sendText :: Text -> Method
+sendText              = method'   "Input.SendText"      . HM.singleton "text" . String
+executeAction :: Action -> Method
+executeAction         = method'   "Input.ExecuteAction" . HM.singleton "action" . showAction
 
 data Action = Left | Right                 | Up                 | Down                | PageUp                  | PageDown
                    | Select                | Highlight          | Parentdir           | Parentfolder            | Back

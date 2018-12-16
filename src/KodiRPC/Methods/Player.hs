@@ -14,7 +14,7 @@ import Text.Regex
 import qualified Data.Text as T
 import qualified Data.Vector as V
 
-getActivePlayers           = method' "Player.GetActivePlayer" HM.empty
+getActivePlayers           = method' "Player.GetActivePlayers" HM.empty
 getItem                    = method' "Player.GetItem" HM.empty
 open                       = method' "Player.Open"
 getProperties playerid propNames = method' "Player.GetProperties" propMap

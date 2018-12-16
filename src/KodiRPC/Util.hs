@@ -33,3 +33,6 @@ maybeSci s = either Just (const Nothing) $ floatingOrInteger s
 maybeInt :: Scientific -> Maybe Int
 maybeInt s = either (const Nothing) Just $ floatingOrInteger s
 
+mapLeft f = either (Prelude.Left . f) (Prelude.Right . id)
+eitherToMaybe = either (const Nothing) Just
+

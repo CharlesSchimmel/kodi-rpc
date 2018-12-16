@@ -6,6 +6,8 @@
 
 module KodiRPC.Types where
 
+import KodiRPC.Util
+
 import Prelude as P
 import Control.Monad.IO.Class
 import Control.Applicative
@@ -51,7 +53,8 @@ instance ToJSON Method where
 
 method' :: String -> Params -> Method
 method' = Method 1.0 2.0
-methodNoP x = method' x HM.empty
+
+methodNoP = flip method' HM.empty
 
 data Notif = Notif
    { _notifJsonrpc :: String
@@ -85,6 +88,10 @@ instance FromJSON Response where
   parseJSON (Object v) = Response
     <$> (doTheThing <$> (v .:? "error") <*> (v .:? "result"))
     <*> v.: "id"
+
+-- extractResult :: Either String Response -> Either String Value
+extractResult r = mapLeft (const "") =<< gres
+  where gres = _result <$> r
 
 -- there's definitely a better way to do this
 doTheThing (Just a) Nothing = Left a
