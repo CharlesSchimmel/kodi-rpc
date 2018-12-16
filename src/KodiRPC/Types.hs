@@ -26,13 +26,56 @@ import Data.Char as C (toUpper)
 import Data.HashMap.Strict as HM
 import GHC.Generics
 import Lens.Micro.Platform hiding ((.=))
+import qualified Network.HTTP.Client as HC (HttpException)
 import Network.HTTP.Req as R
 
 type Params = Object
 
+data RpcException
+  = ProtocolException HC.HttpException -- network exceptions
+  | ReqException Value -- req exceptions
+  | RpcError ErrorResponse -- RPC errors
+  deriving (Show)
+
+data ErrorResponse = ErrorResponse
+  { _errorCode :: Int
+  , _errorMessage :: T.Text
+  , _errorData :: ErrorData
+  } deriving (Generic, Show, Read)
+
+instance FromJSON ErrorResponse where
+  parseJSON = withObject "ErrorResponse" $ \v -> ErrorResponse
+              <$> v.:"code"
+              <*> v.:"message"
+              <*> v.:"data"
+
+data ErrorData = ErrorData
+  { _dataMethod :: T.Text
+  , _dataStack :: ErrorStack
+  } deriving (Generic, Show, Read)
+
+instance FromJSON ErrorData where
+  parseJSON = withObject "ErrorData" $ \e -> ErrorData
+                <$> e.:"method"
+                <*> e.:"stack"
+
+data ErrorStack = ErrorStack
+  { _stackName :: T.Text
+  , _stackType :: T.Text
+  , _stackMessage :: T.Text
+  } deriving (Generic, Show, Read)
+
+instance FromJSON ErrorStack where
+  parseJSON = withObject "ErrorStack" $ \e -> ErrorStack
+                <$> e.:"name"
+                <*> e.:"type"
+                <*> e.:"message"
+
 data KodiInstance = KodiInstance
    { _server :: T.Text
    , _port   :: Int
+   , _username :: T.Text
+   , _password :: T.Text
    } deriving (Generic, Show)
 
 -- Basic components of a RPC Method
@@ -79,7 +122,7 @@ instance ToJSON GUIProp where
     toJSON = String . T.toLower . pack . show
 
 data Response = Response
-  { _result :: Either Value Value
+  { _result :: Either ErrorResponse Value
   , _responseId :: String
   }
   deriving (Show)

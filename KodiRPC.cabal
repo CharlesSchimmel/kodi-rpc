@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 8a07cf5b7d33687c1367670bf2c6bf0cc8016eb926e6f36cf5adf3ed0a0f1670
+-- hash: 9f4495ea65186153191c388c637f4a5f74d21441cf710a3a85bada64ecf24f5b
 
 name:           KodiRPC
 version:        0.1.0.0
@@ -40,9 +40,11 @@ library
   build-depends:
       aeson
     , base >=4.7 && <5
+    , bytestring
     , containers
     , data-default-class
     , either
+    , http-client
     , lens-aeson
     , microlens-aeson
     , microlens-platform
@@ -68,9 +70,11 @@ executable KodiRPC-exe
       KodiRPC
     , aeson
     , base >=4.7 && <5
+    , bytestring
     , containers
     , data-default-class
     , either
+    , http-client
     , lens-aeson
     , microlens-aeson
     , microlens-platform
@@ -97,9 +101,11 @@ test-suite KodiRPC-test
       KodiRPC
     , aeson
     , base >=4.7 && <5
+    , bytestring
     , containers
     , data-default-class
     , either
+    , http-client
     , lens-aeson
     , microlens-aeson
     , microlens-platform

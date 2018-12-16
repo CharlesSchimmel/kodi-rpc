@@ -17,6 +17,7 @@ import           Control.Monad.Trans.Except
 import           Control.Monad.IO.Class
 import           Data.Aeson         as A
 import           Data.Aeson.Types
+import qualified Data.ByteString.Lazy.Char8 as B (pack)
 import           Data.Default.Class
 import           Data.Either as E
 import           Data.HashMap.Lazy  as HM
@@ -27,15 +28,19 @@ import           Lens.Micro.Platform ((^.), (^?))
 import           Network.HTTP.Req   as R
 import           Network.Socket             (withSocketsDo)
 import qualified Data.Text          as T
+import qualified Data.Text.Encoding as T
 import qualified Data.Text.IO       as T
 import qualified Network.WebSockets as WS
 
 kReq :: (MonadHttp m, ToJSON a, FromJSON b) => KodiInstance -> a -> m (JsonResponse b)
-kReq ki method = req POST (http url /: "jsonrpc") (ReqBodyJson method) jsonResponse (R.port p <> header "Content-Type" "application/json")
+kReq ki method = req POST (http url /: "jsonrpc") (ReqBodyJson method) jsonResponse options
    where p   = ki^.Ty.port
          url = ki^.server
+         options = R.port p
+                    <> header "Content-Type" "application/json"
+                    <> R.basicAuthUnsafe (T.encodeUtf8 $ ki^.username) (T.encodeUtf8 $ ki^.password) -- kodi doesn't support tls/ssl
 
-local = KodiInstance "localhost" 8080
+local = KodiInstance "localhost" 8080 "" ""
 
 kall :: KodiInstance -> Method -> IO (Either String Response)
 kall kodiInstance method = handle excpt (Right <$> kall' kodiInstance method)
@@ -44,8 +49,19 @@ kall kodiInstance method = handle excpt (Right <$> kall' kodiInstance method)
             r <- kReq ki m
             return (responseBody r :: Response)
 
-joinReqResponse :: Either String Response -> Either Value Value
-joinReqResponse res = join $ mapLeft (String . T.pack . show) $ _result <$> res
+kall'' :: KodiInstance -> Method -> IO (Either RpcException Value)
+kall'' ki method = joinReqResponse <$> handle excpt (Right <$> kall' ki method)
+   where excpt e    = return . Left $ handleReqExcpt e
+         kall' ki m = runReq def $ do
+            r <- kReq ki m
+            return (responseBody r :: Response)
+
+handleReqExcpt :: R.HttpException -> RpcException
+handleReqExcpt (JsonHttpException e) = ReqException $ fromMaybe (String . T.pack $ e) (decode (B.pack e) :: Maybe Value)
+handleReqExcpt (R.VanillaHttpException e) = ProtocolException e
+
+joinReqResponse :: Either RpcException Response -> Either RpcException Value
+joinReqResponse res = (mapLeft RpcError . _result) =<< res
 
 tdb x = trace (show x) x
 
@@ -56,8 +72,6 @@ notification ki = withSocketsDo $ WS.runClient (T.unpack $ ki^.server) 9090 "/js
             (WS.Text msg _) <- WS.receiveDataMessage conn
             let dMsg = decode msg :: Maybe Notif
             return dMsg
-
-test' = KodiInstance "localhost" 8080
 
 -- todo: convert to returning IO (Either)
 -- getWindow :: KodiInstance -> IO (Maybe Window)
