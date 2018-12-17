@@ -13,7 +13,7 @@ import           Control.Concurrent
 import           Control.Exception
 import           Control.Monad
 import           Control.Monad.Trans.Maybe
-import           Control.Monad.Trans.Except
+-- import           Control.Monad.Trans.Either
 import           Control.Monad.IO.Class
 import           Data.Aeson         as A
 import           Data.Aeson.Types
@@ -40,17 +40,8 @@ kReq ki method = req POST (http url /: "jsonrpc") (ReqBodyJson method) jsonRespo
                     <> header "Content-Type" "application/json"
                     <> R.basicAuthUnsafe (T.encodeUtf8 $ ki^.username) (T.encodeUtf8 $ ki^.password) -- kodi doesn't support tls/ssl
 
-local = KodiInstance "localhost" 8080 "" ""
-
-kall :: KodiInstance -> Method -> IO (Either String Response)
-kall kodiInstance method = handle excpt (Right <$> kall' kodiInstance method)
-   where excpt e    = return . Left $ show (e::HttpException)
-         kall' ki m = runReq def $ do
-            r <- kReq ki m
-            return (responseBody r :: Response)
-
-kall'' :: KodiInstance -> Method -> IO (Either RpcException Value)
-kall'' ki method = joinReqResponse <$> handle excpt (Right <$> kall' ki method)
+kall :: KodiInstance -> Method -> IO (Either RpcException Value)
+kall ki method = joinReqResponse <$> handle excpt (Right <$> kall' ki method)
    where excpt e    = return . Left $ handleReqExcpt e
          kall' ki m = runReq def $ do
             r <- kReq ki m
@@ -63,8 +54,6 @@ handleReqExcpt (R.VanillaHttpException e) = ProtocolException e
 joinReqResponse :: Either RpcException Response -> Either RpcException Value
 joinReqResponse res = (mapLeft RpcError . _result) =<< res
 
-tdb x = trace (show x) x
-
 notification :: KodiInstance -> IO (Maybe Notif)
 notification ki = withSocketsDo $ WS.runClient (T.unpack $ ki^.server) 9090 "/jsonrpc" kNotifHandler
     where kNotifHandler :: WS.Connection -> IO (Maybe Notif)
@@ -73,20 +62,11 @@ notification ki = withSocketsDo $ WS.runClient (T.unpack $ ki^.server) 9090 "/js
             let dMsg = decode msg :: Maybe Notif
             return dMsg
 
--- todo: convert to returning IO (Either)
--- getWindow :: KodiInstance -> IO (Maybe Window)
+getWindow :: KodiInstance -> IO (Either RpcException Window)
 getWindow ki = do
-    let response = MaybeT $ do
-            r <- kall ki $ Gui.getProperties [Currentwindow] -- Either String Response
-            return $ join $ eitherToMaybe . _result <$> eitherToMaybe r
-    runMaybeT $ do
-        win <- response
-        cwin <- lookup' "currentwindow" win
-        label <- lookup' "label" cwin
-        winId <- lookup' "id" cwin
-        return $ Window label winId -- change Window to Window String Int ?
-    where lookup' key (Object o) = MaybeT $ return $ HM.lookup key o
-          lookup' _ _            = MaybeT $ return Nothing
+    win <- kall ki $ Gui.getProperties [Currentwindow] -- Either RpcExcpt Value
+    return $ mapLeft (ReqException . String . T.pack) =<< parseEither lookupWin <$> win
+    where lookupWin = withObject "Window" $ \o -> o .: "currentwindow" :: Parser Window
 
 smartActionMap :: Window -> I.Action -> I.Action
 smartActionMap (Window "Fullscreen video"    _ ) I.Up    = I.Bigstepforward
@@ -99,10 +79,9 @@ smartActionMap (Window "Audio visualisation" _ ) I.Left  = I.Stepback
 smartActionMap (Window "Audio visualisation" _ ) I.Right = I.Stepforward
 smartActionMap _                                 x       = x
 
-smartAction :: KodiInstance -> I.Action -> IO (Either String Response)
-smartAction ki action = getWindow ki >>= maybe conErr doAction
+smartAction :: KodiInstance -> I.Action -> IO (Either RpcException Value)
+smartAction ki action = getWindow ki >>= either (pure . Left) doAction
     where doAction window = kall ki $ I.executeAction $ smartActionMap window action
-          conErr = return $ Left "Connection error. Received no window."
 
 ping :: KodiInstance -> IO (Maybe KodiInstance)
 ping ki = either (const Nothing) (const $ Just ki) <$> kall ki (Application.getProperties [Application.Version])

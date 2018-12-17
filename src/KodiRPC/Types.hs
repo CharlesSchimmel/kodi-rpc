@@ -29,8 +29,6 @@ import Lens.Micro.Platform hiding ((.=))
 import qualified Network.HTTP.Client as HC (HttpException)
 import Network.HTTP.Req as R
 
-type Params = Object
-
 data RpcException
   = ProtocolException HC.HttpException -- network exceptions
   | ReqException Value -- req exceptions
@@ -78,6 +76,8 @@ data KodiInstance = KodiInstance
    , _password :: T.Text
    } deriving (Generic, Show)
 
+type Params = Object
+
 -- Basic components of a RPC Method
 data Method = Method 
    { _methodId      :: Double
@@ -111,16 +111,6 @@ instance FromJSON Notif where
       <*> v.: "method"
       <*> v.: "params"
 
-data GUIProp = Currentwindow
-             | Currentcontrol
-             | Skin
-             | Fullscreen
-             | Stereoscopicmode
-          deriving (Show, Generic, Enum, Bounded, Read)
-
-instance ToJSON GUIProp where
-    toJSON = String . T.toLower . pack . show
-
 data Response = Response
   { _result :: Either ErrorResponse Value
   , _responseId :: String
@@ -132,10 +122,6 @@ instance FromJSON Response where
     <$> (doTheThing <$> (v .:? "error") <*> (v .:? "result"))
     <*> v.: "id"
 
--- extractResult :: Either String Response -> Either String Value
-extractResult r = mapLeft (const "") =<< gres
-  where gres = _result <$> r
-
 -- there's definitely a better way to do this
 doTheThing (Just a) Nothing = Left a
 doTheThing Nothing (Just a) = Right a
@@ -145,8 +131,15 @@ data Window = Window
     , _winId    :: Value
     } deriving (Generic, Show, Read)
 
+instance FromJSON Window where
+  parseJSON = withObject "Window" $ \w -> Window
+              <$> w.:"label"
+              <*> w.:"id"
+
 makeLenses ''Window
 makeLenses ''KodiInstance
 makeLenses ''Method
 makeLenses ''Notif
 makeLenses ''Response
+
+local = KodiInstance "localhost" 8080 "" ""

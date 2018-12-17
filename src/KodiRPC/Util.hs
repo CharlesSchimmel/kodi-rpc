@@ -5,8 +5,7 @@ import Data.Aeson
 import Control.Monad
 import Data.Text
 import Data.Scientific
-
--- Aeson convenience methods
+import Debug.Trace
 
 -- Easier lookup for Objects
 lookup' :: Text -> Value -> Maybe Value
@@ -33,6 +32,7 @@ maybeSci s = either Just (const Nothing) $ floatingOrInteger s
 maybeInt :: Scientific -> Maybe Int
 maybeInt s = either (const Nothing) Just $ floatingOrInteger s
 
-mapLeft f = either (Prelude.Left . f) (Prelude.Right . id)
+mapLeft f = either (Left . f) Right
 eitherToMaybe = either (const Nothing) Just
 
+tdb x = trace (show x) x
