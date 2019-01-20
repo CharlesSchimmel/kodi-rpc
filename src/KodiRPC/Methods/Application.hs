@@ -2,7 +2,7 @@
 
 module KodiRPC.Methods.Application where
 
-import KodiRPC.Types
+import KodiRPC.Types.Base
 
 import Data.Aeson
 import Data.Aeson.Types

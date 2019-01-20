@@ -3,7 +3,7 @@
 
 module KodiRPC.Methods.GUI where
 
-import KodiRPC.Types
+import KodiRPC.Types.Base
 
 import Data.Aeson
 import Data.HashMap.Strict as HM

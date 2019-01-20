@@ -4,7 +4,7 @@
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE FlexibleInstances #-}
 
-module KodiRPC.Types where
+module KodiRPC.Types.Base where
 
 import KodiRPC.Util
 
@@ -38,14 +38,14 @@ data RpcException
 data ErrorResponse = ErrorResponse
   { _errorCode :: Int
   , _errorMessage :: T.Text
-  , _errorData :: ErrorData
+  , _errorData :: Maybe ErrorData
   } deriving (Generic, Show, Read)
 
 instance FromJSON ErrorResponse where
   parseJSON = withObject "ErrorResponse" $ \v -> ErrorResponse
               <$> v.:"code"
               <*> v.:"message"
-              <*> v.:"data"
+              <*> v.:?"data"
 
 data ErrorData = ErrorData
   { _dataMethod :: T.Text
@@ -102,14 +102,14 @@ methodNoP = flip method' HM.empty
 data Notif = Notif
    { _notifJsonrpc :: String
    , _notifMethod  :: String
-   , _notifParams  :: Object
+   , _notifData    :: Object
+   , _notifSender  :: String
    } deriving (Generic, Show)
 
 instance FromJSON Notif where
-   parseJSON = withObject "Notif" $ \v -> Notif
-      <$> v.: "jsonrpc"
-      <*> v.: "method"
-      <*> v.: "params"
+   parseJSON = withObject "Notif" $ \v -> do
+      params <- v.:"params"
+      Notif <$> v.:"jsonrpc" <*> v.:"method" <*> params.:"data" <*> params.:"sender"
 
 data Response = Response
   { _result :: Either ErrorResponse Value
@@ -135,6 +135,9 @@ instance FromJSON Window where
   parseJSON = withObject "Window" $ \w -> Window
               <$> w.:"label"
               <*> w.:"id"
+
+class Field a where
+  fromField :: a -> String
 
 makeLenses ''Window
 makeLenses ''KodiInstance

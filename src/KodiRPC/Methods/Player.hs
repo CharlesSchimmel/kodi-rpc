@@ -3,7 +3,7 @@
 module KodiRPC.Methods.Player where
 
 import KodiRPC.Calls
-import KodiRPC.Types
+import KodiRPC.Types.Base
 
 import Prelude as P
 import Control.Monad
@@ -15,10 +15,11 @@ import qualified Data.Text as T
 import qualified Data.Vector as V
 
 getActivePlayers           = method' "Player.GetActivePlayers" HM.empty
-getItem                    = method' "Player.GetItem" HM.empty
+getItem playerid           = method' "Player.GetItem" propMap
+  where propMap = fromList [("playerid", toJSON playerid)]
 open                       = method' "Player.Open"
 getProperties playerid propNames = method' "Player.GetProperties" propMap
-  where propMap = fromList [("playerid", Number playerid),("properties", propNames')]
+  where propMap = fromList [("playerid", toJSON playerid),("properties", propNames')]
         propNames' = Array . V.fromList $ P.map showPropertyName propNames
 
 -- Could create new type for kodi-specific paths (plugin, video, music, etc.)
@@ -35,12 +36,12 @@ matchYouTubeId link = T.pack . last <$> matchRegex (mkRegex youtubeIdRegex) (T.u
   where youtubeIdRegex = "(youtu\\.be\\/|youtube\\.com\\/(watch\\?(.*&)?v=|(embed|v)\\/))([^\\?&\"'>]+)" :: String
 
 data PropertyName = Audiostreams | Canchangespeed  | Canmove            | Canrepeat       | Canrotate
-                                       | Canseek         | Canshuffle         | Canzoom         | Currentaudiostream
-                                       | Currentsubtitle | Currentvideostream | Live            | Partymode
-                                       | Percentage      | Playlistid         | Position        | Repeat
-                                       | Shuffled        | Speed              | Subtitleenabled | Subtitles
-                                       | Time            | Totaltime          | Type            | Videostreams
-                                       deriving (Show)
+                                 | Canseek         | Canshuffle         | Canzoom         | Currentaudiostream
+                                 | Currentsubtitle | Currentvideostream | Live            | Partymode
+                                 | Percentage      | Playlistid         | Position        | Repeat
+                                 | Shuffled        | Speed              | Subtitleenabled | Subtitles
+                                 | Time            | Totaltime          | Type            | Videostreams
+                                deriving (Show)
 
 showPropertyName :: PropertyName -> Value
 showPropertyName = String . T.toLower . T.pack . show

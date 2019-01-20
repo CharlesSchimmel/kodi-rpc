@@ -4,7 +4,7 @@ module KodiRPC.Calls where
 
 import KodiRPC.Methods.Application as Application
 import KodiRPC.Util
-import KodiRPC.Types as Ty
+import KodiRPC.Types.Base as Ty
 import qualified KodiRPC.Methods.Input as I
 import KodiRPC.Methods.GUI as Gui
 
@@ -79,6 +79,7 @@ smartActionMap (Window "Audio visualisation" _ ) I.Left  = I.Stepback
 smartActionMap (Window "Audio visualisation" _ ) I.Right = I.Stepforward
 smartActionMap _                                 x       = x
 
+-- | Perform appropriate actions depending on the window context. Eg while in a video, left jumps back
 smartAction :: KodiInstance -> I.Action -> IO (Either RpcException Value)
 smartAction ki action = getWindow ki >>= either (pure . Left) doAction
     where doAction window = kall ki $ I.executeAction $ smartActionMap window action

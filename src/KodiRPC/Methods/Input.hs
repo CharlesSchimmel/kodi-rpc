@@ -2,7 +2,7 @@
 
 module KodiRPC.Methods.Input where
 
-import KodiRPC.Types
+import KodiRPC.Types.Base
 
 import Prelude as P
 import Data.HashMap.Strict as HM
