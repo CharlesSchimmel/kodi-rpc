@@ -5,31 +5,26 @@ module KodiRPC.Calls where
 import KodiRPC.Methods.Application as Application
 import KodiRPC.Util
 import KodiRPC.Types.Base as Ty
-import qualified KodiRPC.Methods.Input as I
 import KodiRPC.Methods.GUI as Gui
+import qualified KodiRPC.Methods.Input as I
 
-import Debug.Trace
-import           Control.Concurrent
 import           Control.Exception
 import           Control.Monad
 import           Control.Monad.Trans.Maybe
--- import           Control.Monad.Trans.Either
 import           Control.Monad.IO.Class
 import           Data.Aeson         as A
 import           Data.Aeson.Types
 import qualified Data.ByteString.Lazy.Char8 as B (pack)
 import           Data.Default.Class
-import           Data.Either as E
 import           Data.HashMap.Lazy  as HM
 import           Data.Maybe
 import           Data.Monoid
 import           GHC.Generics
-import           Lens.Micro.Platform ((^.), (^?))
+import           Lens.Micro.Platform ((^.))
 import           Network.HTTP.Req   as R
 import           Network.Socket             (withSocketsDo)
 import qualified Data.Text          as T
 import qualified Data.Text.Encoding as T
-import qualified Data.Text.IO       as T
 import qualified Network.WebSockets as WS
 
 kReq :: (MonadHttp m, ToJSON a, FromJSON b) => KodiInstance -> a -> m (JsonResponse b)
@@ -46,20 +41,19 @@ kall ki method = joinReqResponse <$> handle excpt (Right <$> kall' ki method)
          kall' ki m = runReq def $ do
             r <- kReq ki m
             return (responseBody r :: Response)
-
-handleReqExcpt :: R.HttpException -> RpcException
-handleReqExcpt (JsonHttpException e) = ReqException $ fromMaybe (String . T.pack $ e) (decode (B.pack e) :: Maybe Value)
-handleReqExcpt (R.VanillaHttpException e) = ProtocolException e
-
-joinReqResponse :: Either RpcException Response -> Either RpcException Value
-joinReqResponse res = (mapLeft RpcError . _result) =<< res
+         joinReqResponse :: Either RpcException Response -> Either RpcException Value
+         joinReqResponse res = (mapLeft RpcError . _result) =<< res
+         handleReqExcpt :: R.HttpException -> RpcException
+         handleReqExcpt (JsonHttpException e) = ReqException $ fromMaybe (String . T.pack $ e) (decode (B.pack e) :: Maybe Value)
+         handleReqExcpt (R.VanillaHttpException e) = ProtocolException e
 
 notification :: KodiInstance -> IO (Maybe Notif)
 notification ki = withSocketsDo $ WS.runClient (T.unpack $ ki^.server) 9090 "/jsonrpc" kNotifHandler
     where kNotifHandler :: WS.Connection -> IO (Maybe Notif)
           kNotifHandler conn = do
             (WS.Text msg _) <- WS.receiveDataMessage conn
-            let dMsg = decode msg :: Maybe Notif
+            let eitherMsg = eitherDecode msg
+            let dMsg = either (const Nothing) Just eitherMsg
             return dMsg
 
 getWindow :: KodiInstance -> IO (Either RpcException Window)

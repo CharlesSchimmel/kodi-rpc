@@ -4,6 +4,7 @@ module KodiRPC.Methods.Player where
 
 import KodiRPC.Calls
 import KodiRPC.Types.Base
+import KodiRPC.Types.Fields.All
 
 import Prelude as P
 import Control.Monad
@@ -15,8 +16,12 @@ import qualified Data.Text as T
 import qualified Data.Vector as V
 
 getActivePlayers           = method' "Player.GetActivePlayers" HM.empty
-getItem playerid           = method' "Player.GetItem" propMap
-  where propMap = fromList [("playerid", toJSON playerid)]
+
+getItem :: Int -> [AllField] -> Method
+getItem playerid fields    = method' "Player.GetItem" propMap
+  where propMap = fromList [("playerid", toJSON playerid), ("properties", propNames)]
+        propNames = Array . V.fromList $ P.map (String . showAllField) fields
+
 open                       = method' "Player.Open"
 getProperties playerid propNames = method' "Player.GetProperties" propMap
   where propMap = fromList [("playerid", toJSON playerid),("properties", propNames')]

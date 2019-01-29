@@ -8,6 +8,8 @@ module KodiRPC.Types.Base where
 
 import KodiRPC.Util
 
+import Debug.Trace
+
 import Prelude as P
 import Control.Monad.IO.Class
 import Control.Applicative
@@ -107,7 +109,7 @@ data Notif = Notif
    } deriving (Generic, Show)
 
 instance FromJSON Notif where
-   parseJSON = withObject "Notif" $ \v -> do
+  parseJSON j = flip (withObject "Notif") j $ \v -> do
       params <- v.:"params"
       Notif <$> v.:"jsonrpc" <*> v.:"method" <*> params.:"data" <*> params.:"sender"
 
@@ -124,7 +126,8 @@ instance FromJSON Response where
 
 -- there's definitely a better way to do this
 doTheThing (Just a) Nothing = Left a
-doTheThing Nothing (Just a) = Right a
+doTheThing _       (Just a) = Right a
+doTheThing _       _        = Left $ ErrorResponse 0 "Failed to parse response" Nothing
 
 data Window = Window
     { _winLabel :: Value

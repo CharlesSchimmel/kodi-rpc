@@ -27,5 +27,8 @@ data AllField = Album | Albumartist        | Albumartistid  | Albumid           
                        | Watchedepisodes    | Writer         | Year
                        deriving ( Show )
 
+showAllField :: AllField -> T.Text
+showAllField = T.toLower . T.pack . show
+
 instance Field AllField where
   fromField = T.unpack . T.toLower . T.pack . show
