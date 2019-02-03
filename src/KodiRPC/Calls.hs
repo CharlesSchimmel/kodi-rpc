@@ -63,15 +63,17 @@ getWindow ki = do
     where lookupWin = withObject "Window" $ \o -> o .: "currentwindow" :: Parser Window
 
 smartActionMap :: Window -> I.Action -> I.Action
-smartActionMap (Window "Fullscreen video"    _ ) I.Up    = I.Bigstepforward
-smartActionMap (Window "Fullscreen video"    _ ) I.Down  = I.Bigstepback
-smartActionMap (Window "Fullscreen video"    _ ) I.Left  = I.Stepback
-smartActionMap (Window "Fullscreen video"    _ ) I.Right = I.Stepforward
-smartActionMap (Window "Audio visualisation" _ ) I.Up    = I.Bigstepforward
-smartActionMap (Window "Audio visualisation" _ ) I.Down  = I.Bigstepback
-smartActionMap (Window "Audio visualisation" _ ) I.Left  = I.Stepback
-smartActionMap (Window "Audio visualisation" _ ) I.Right = I.Stepforward
-smartActionMap _                                 x       = x
+smartActionMap (Window "Fullscreen video"    _ ) I.Up     = I.Bigstepforward
+smartActionMap (Window "Fullscreen video"    _ ) I.Down   = I.Bigstepback
+smartActionMap (Window "Fullscreen video"    _ ) I.Left   = I.Stepback
+smartActionMap (Window "Fullscreen video"    _ ) I.Right  = I.Stepforward
+smartActionMap (Window "Fullscreen video"    _ ) I.Select = I.Osd
+smartActionMap (Window "Audio visualisation" _ ) I.Up     = I.Bigstepforward
+smartActionMap (Window "Audio visualisation" _ ) I.Down   = I.Bigstepback
+smartActionMap (Window "Audio visualisation" _ ) I.Left   = I.Stepback
+smartActionMap (Window "Audio visualisation" _ ) I.Right  = I.Stepforward
+smartActionMap (Window "Audio visualisation" _ ) I.Select = I.Osd
+smartActionMap _                                 x        = x
 
 -- | Perform appropriate actions depending on the window context. Eg while in a video, left jumps back
 smartAction :: KodiInstance -> I.Action -> IO (Either RpcException Value)
