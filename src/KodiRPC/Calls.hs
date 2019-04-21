@@ -35,14 +35,17 @@ kReq ki method = req POST (http url /: "jsonrpc") (ReqBodyJson method) jsonRespo
                     <> header "Content-Type" "application/json"
                     <> R.basicAuthUnsafe (T.encodeUtf8 $ ki^.username) (T.encodeUtf8 $ ki^.password) -- kodi doesn't support tls/ssl
 
-kall :: KodiInstance -> Method -> IO (Either RpcException Value)
+kall :: KodiInstance -> Method -> IO RpcResult
 kall ki method = joinReqResponse <$> handle excpt (Right <$> kall' ki method)
-   where excpt e    = return . Left $ handleReqExcpt e
-         kall' ki m = runReq def $ do
+   where kall' ki m = runReq def $ do
             r <- kReq ki m
-            return (responseBody r :: Response)
-         joinReqResponse :: Either RpcException Response -> Either RpcException Value
+            return (responseBody r :: RpcResponse)
+         excpt e    = return . Left $ handleReqExcpt e
+         -- join the Rpc-level errors (that RpcResult holds) into the overall error stack
+         joinReqResponse :: Either RpcException RpcResponse -> Either RpcException Value
          joinReqResponse res = (mapLeft RpcError . _result) =<< res
+         -- Convert req errors into errors that fit into our exception stack
+         -- todo, probably unecessary
          handleReqExcpt :: R.HttpException -> RpcException
          handleReqExcpt (JsonHttpException e) = ReqException $ fromMaybe (String . T.pack $ e) (decode (B.pack e) :: Maybe Value)
          handleReqExcpt (R.VanillaHttpException e) = ProtocolException e
@@ -62,6 +65,14 @@ getWindow ki = do
     return $ mapLeft (ReqException . String . T.pack) =<< parseEither lookupWin <$> win
     where lookupWin = withObject "Window" $ \o -> o .: "currentwindow" :: Parser Window
 
+getWindow' :: Monad m => Kaller m -> m (Either RpcException Window)
+getWindow' kallr = do
+    win <- kallr $ Gui.getProperties [Currentwindow] -- Either RpcExcpt Value
+    return $ mapLeft (ReqException . String . T.pack) =<< parseEither lookupWin <$> win
+    where lookupWin = withObject "Window" $ \o -> o .: "currentwindow" :: Parser Window
+
+doGetWindow' ki = getWindow' (kall ki)
+
 smartActionMap :: Window -> I.Action -> I.Action
 smartActionMap (Window "Fullscreen video"    _ ) I.Up     = I.Bigstepforward
 smartActionMap (Window "Fullscreen video"    _ ) I.Down   = I.Bigstepback
@@ -76,7 +87,28 @@ smartActionMap (Window "Audio visualisation" _ ) I.Select = I.Osd
 smartActionMap _                                 x        = x
 
 -- | Perform appropriate actions depending on the window context. Eg while in a video, left jumps back
-smartAction :: KodiInstance -> I.Action -> IO (Either RpcException Value)
+smartAction' :: Monad m =>
+                Kaller m ->
+                Window ->
+                I.Action ->
+                m RpcResult
+smartAction' kallr window action = kallr . I.executeAction $ smartActionMap window action
+
+smartAction'' :: Monad m =>
+                 Kaller m ->
+                 (Kaller m -> m (Either RpcException Window)) ->
+                 I.Action ->
+                 m RpcResult
+smartAction'' kallr windowr action = windowr kallr >>= either (pure . Left) smAct
+    where smAct win = smartAction' kallr win action
+
+doSmartAction :: KodiInstance -> I.Action -> IO RpcResult
+doSmartAction ki action = getWindow' kallr >>= either (pure . Left) smAct
+    where kallr = kall ki
+          smAct win = smartAction' kallr win action
+
+-- | Perform appropriate actions depending on the window context. Eg while in a video, left jumps back
+smartAction :: KodiInstance -> I.Action -> IO RpcResult
 smartAction ki action = getWindow ki >>= either (pure . Left) doAction
     where doAction window = kall ki $ I.executeAction $ smartActionMap window action
 

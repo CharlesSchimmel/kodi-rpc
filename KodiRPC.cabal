@@ -1,8 +1,10 @@
--- This file has been generated from package.yaml by hpack version 0.28.2.
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.31.1.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: fc16c5cd980664eed351f4415fc2f2ba6b68bd8413e762f53717015bf3ee3e00
+-- hash: 8dce8309dc7ea42e4253c5a3ec4fdaf43a69296a3b18151b6e9c11d65555b045
 
 name:           KodiRPC
 version:        0.1.0.0
@@ -15,10 +17,9 @@ copyright:      2018 Author name here
 license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
-cabal-version:  >= 1.10
 extra-source-files:
-    ChangeLog.md
     README.md
+    ChangeLog.md
 
 source-repository head
   type: git
@@ -31,6 +32,7 @@ library
       KodiRPC.Methods.GUI
       KodiRPC.Methods.Input
       KodiRPC.Methods.Player
+      KodiRPC.Methods.Playlist
       KodiRPC.Types.Base
       KodiRPC.Types.Fields.All
       KodiRPC.Types.Fields.File

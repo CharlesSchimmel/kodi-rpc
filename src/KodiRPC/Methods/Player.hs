@@ -23,6 +23,7 @@ getItem playerid fields    = method' "Player.GetItem" propMap
         propNames = Array . V.fromList $ P.map (String . showAllField) fields
 
 open                       = method' "Player.Open"
+getProperties :: Int -> [PropertyName] -> Method
 getProperties playerid propNames = method' "Player.GetProperties" propMap
   where propMap = fromList [("playerid", toJSON playerid),("properties", propNames')]
         propNames' = Array . V.fromList $ P.map showPropertyName propNames
@@ -34,7 +35,9 @@ openPath path = open item
         pathHM = Object $ HM.singleton (T.pack "file") (String path)
 
 openYoutube :: T.Text -> Method
-openYoutube link = openPath $ T.append "plugin://plugin.video.youtube/?action=play_video&videoid=" link
+openYoutube = openPath . asYTPluginPath
+
+asYTPluginPath link = T.append "plugin://plugin.video.youtube/?action=play_video&videoid=" link
 
 matchYouTubeId :: T.Text -> Maybe T.Text
 matchYouTubeId link = T.pack . last <$> matchRegex (mkRegex youtubeIdRegex) (T.unpack link)
