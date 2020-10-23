@@ -9,17 +9,10 @@ import KodiRPC.Methods.GUI as Gui
 import qualified KodiRPC.Methods.Input as I
 
 import           Control.Exception
-import           Control.Monad
-import           Control.Monad.Trans.Maybe
-import           Control.Monad.IO.Class
 import           Data.Aeson         as A
 import           Data.Aeson.Types
 import qualified Data.ByteString.Lazy.Char8 as B (pack)
-import           Data.Default.Class
-import           Data.HashMap.Lazy  as HM
 import           Data.Maybe
-import           Data.Monoid
-import           GHC.Generics
 import           Lens.Micro.Platform ((^.))
 import           Network.HTTP.Req   as R
 import           Network.Socket             (withSocketsDo)
@@ -37,7 +30,7 @@ kReq ki method = req POST (http url /: "jsonrpc") (ReqBodyJson method) jsonRespo
 
 kall :: KodiInstance -> Method -> IO RpcResult
 kall ki method = joinReqResponse <$> handle excpt (Right <$> kall' ki method)
-   where kall' ki m = runReq def $ do
+   where kall' ki m = runReq defaultHttpConfig $ do
             r <- kReq ki m
             return (responseBody r :: RpcResponse)
          excpt e    = return . Left $ handleReqExcpt e
